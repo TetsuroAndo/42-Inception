@@ -55,43 +55,55 @@ mkdir -p data/{wp,db,redis}
 ### 3.1 ディレクトリ構造
 
 ```
-inception/
+Inception
 ├── Makefile
-├── srcs/
-│   ├── docker-compose.yml
-│   ├── .env.template
-│   └── requirements/
-│       ├── mariadb/          # 必須サービス
-│       │   ├── Dockerfile
-│       │   ├── conf/
-│       │   └── tools/
-│       ├── nginx/            # 必須サービス
-│       │   ├── Dockerfile
-│       │   └── conf/
-│       ├── wordpress/        # 必須サービス
-│       │   ├── Dockerfile
-│       │   ├── conf/
-│       │   └── tools/
-│       └── bonus/            # ボーナスサービス
-│           ├── redis/        # Redisキャッシュ
-│           │   ├── Dockerfile
-│           │   ├── conf/
-│           │   └── tools/
-│           ├── ftp/          # FTPサーバー
-│           │   ├── Dockerfile
-│           │   ├── conf/
-│           │   └── tools/
-│           ├── adminer/      # データベース管理
-│           │   ├── Dockerfile
-│           │   └── tools/
-│           └── static/       # 静的サイト
-│               ├── Dockerfile
-│               ├── conf/
-│               └── html/
-└── data/                     # 永続化データ
-    ├── wp/
-    ├── db/
-    └── redis/
+├── README.md
+├── data/
+│   ├── db/
+│   └── wp/
+└── srcs/
+    ├── docker-compose.yml
+    └── requirements/
+        ├── bonus/
+        │   ├── adminer/
+        │   │   ├── Dockerfile
+        │   │   └── tools/
+        │   │       └── index.php
+        │   ├── ftp/
+        │   │   ├── Dockerfile
+        │   │   ├── conf/
+        │   │   │   └── vsftpd.conf
+        │   │   └── tools/
+        │   │       └── setup.sh
+        │   ├── redis/
+        │   │   ├── Dockerfile
+        │   │   ├── conf/
+        │   │   │   └── redis.conf
+        │   │   └── tools/
+        │   │       └── setup.sh
+        │   └── static/
+        │       ├── Dockerfile
+        │       ├── conf/
+        │       │   └── default.conf
+        │       └── html/
+        │           └── index.html
+        ├── mariadb/
+        │   ├── Dockerfile
+        │   ├── conf/
+        │   │   └── 50-server.cnf
+        │   └── tools/
+        │       └── init_db.sh
+        ├── nginx/
+        │   ├── Dockerfile
+        │   └── conf/
+        │       └── default.conf
+        └── wordpress/
+            ├── Dockerfile
+            ├── conf/
+            │   └── www.conf
+            └── tools/
+                ├── setup.sh
+                └── wp-config.php
 ```
 
 ### 3.2 必須サービス
