@@ -1,6 +1,6 @@
 NAME = inception
 DOCKER_COMPOSE = docker-compose -f ./srcs/docker-compose.yml
-DATA_PATH = /home/$(USER)/data
+DATA_PATH = $(HOME)/data
 ENV_FILE = ./srcs/.env
 ENV_TEMPLATE = ./srcs/.env.template
 
@@ -34,9 +34,11 @@ up:
 	@echo "Waiting for services to be ready..."
 	@sleep 10
 	@echo "Services are ready!"
-	@echo "WordPress: https://$(shell grep DOMAIN_NAME $(ENV_FILE) | cut -d '=' -f2)"
-	@echo "Adminer: https://$(shell grep DOMAIN_NAME $(ENV_FILE) | cut -d '=' -f2)/adminer/"
-	@echo "Static Site: http://$(shell grep DOMAIN_NAME $(ENV_FILE) | cut -d '=' -f2):8080"
+	@echo "Access URLs:"
+	@echo "  - WordPress: https://$(shell grep DOMAIN_NAME $(ENV_FILE) | cut -d '=' -f2)"
+	@echo "  - Adminer:  https://$(shell grep DOMAIN_NAME $(ENV_FILE) | cut -d '=' -f2)/adminer/"
+	@echo "  - Static:   http://$(shell grep DOMAIN_NAME $(ENV_FILE) | cut -d '=' -f2):8080"
+	@echo "  - FTP:      ftp://$(shell grep DOMAIN_NAME $(ENV_FILE) | cut -d '=' -f2):21"
 
 down:
 	@echo "Stopping services..."
@@ -63,23 +65,37 @@ logs:
 ps:
 	@$(DOCKER_COMPOSE) ps
 
+# サービス個別のログ
+%-logs:
+	@echo "Showing logs for $* service..."
+	@docker logs $*
+
+# サービス個別の再起動
+%-restart:
+	@echo "Restarting $* service..."
+	@$(DOCKER_COMPOSE) restart $*
+
 # 再起動とリロード
 reload: down up
 
 re: fclean all
 
-# ボーナスサービスの個別制御
+# ボーナスサービスの操作
 redis-cli:
+	@echo "Connecting to Redis CLI..."
 	@docker exec -it redis redis-cli
 
 adminer-logs:
+	@echo "Showing logs for Adminer service..."
 	@docker logs adminer
 
 static-logs:
+	@echo "Showing logs for Static service..."
 	@docker logs static
 
 ftp-logs:
+	@echo "Showing logs for FTP service..."
 	@docker logs ftp
 
 .PHONY: all setup create_dirs check_env build up down clean fclean logs ps reload re \
-        redis-cli adminer-logs static-logs ftp-logs
+        redis-cli %-logs %-restart adminer-logs static-logs ftp-logs

@@ -13,47 +13,6 @@ Inception プロジェクトは、Docker を使用して複数のサービスを
 - 環境変数による設定管理
 - 各サービスの独立性と連携
 
-### ディレクトリ構造
-
-```
-inception/
-├── Makefile
-├── srcs/
-│   ├── docker-compose.yml
-│   ├── .env.template
-│   └── requirements/
-│       ├── mariadb/
-│       │   ├── Dockerfile
-│       │   ├── conf/
-│       │   └── tools/
-│       ├── nginx/
-│       │   ├── Dockerfile
-│       │   └── conf/
-│       ├── wordpress/
-│       │   ├── Dockerfile
-│       │   ├── conf/
-│       │   └── tools/
-│       ├── redis/
-│       │   ├── Dockerfile
-│       │   ├── conf/
-│       │   └── tools/
-│       ├── ftp/
-│       │   ├── Dockerfile
-│       │   ├── conf/
-│       │   └── tools/
-│       ├── adminer/
-│       │   ├── Dockerfile
-│       │   └── tools/
-│       └── static/
-│           ├── Dockerfile
-│           ├── conf/
-│           └── html/
-└── data/
-    ├── wp/
-    ├── db/
-    └── redis/
-```
-
 ## 2. 開発環境のセットアップ
 
 ### 2.1 必要なツール
@@ -91,14 +50,114 @@ mkdir -p srcs/requirements/{mariadb,nginx,wordpress}/{conf,tools}
 mkdir -p data/{wp,db,redis}
 ```
 
-3. **環境変数の設定**
+## 3. プロジェクトの構造
+
+### 3.1 ディレクトリ構造
+
+```
+inception/
+├── Makefile
+├── srcs/
+│   ├── docker-compose.yml
+│   ├── .env.template
+│   └── requirements/
+│       ├── mariadb/          # 必須サービス
+│       │   ├── Dockerfile
+│       │   ├── conf/
+│       │   └── tools/
+│       ├── nginx/            # 必須サービス
+│       │   ├── Dockerfile
+│       │   └── conf/
+│       ├── wordpress/        # 必須サービス
+│       │   ├── Dockerfile
+│       │   ├── conf/
+│       │   └── tools/
+│       └── bonus/            # ボーナスサービス
+│           ├── redis/        # Redisキャッシュ
+│           │   ├── Dockerfile
+│           │   ├── conf/
+│           │   └── tools/
+│           ├── ftp/          # FTPサーバー
+│           │   ├── Dockerfile
+│           │   ├── conf/
+│           │   └── tools/
+│           ├── adminer/      # データベース管理
+│           │   ├── Dockerfile
+│           │   └── tools/
+│           └── static/       # 静的サイト
+│               ├── Dockerfile
+│               ├── conf/
+│               └── html/
+└── data/                     # 永続化データ
+    ├── wp/
+    ├── db/
+    └── redis/
+```
+
+### 3.2 必須サービス
+
+#### MariaDB (Database)
+
+- Debian buster ベース
+- カスタム初期化スクリプト
+- データ永続化
+- セキュリティ設定の最適化
+
+#### WordPress + PHP-FPM
+
+- PHP 7.3-fpm
+- WP-CLI による自動セットアップ
+- Redis キャッシュ統合
+- パフォーマンスチューニング
+
+#### Nginx
+
+- TLS 1.2/1.3 対応
+- セキュリティヘッダー実装
+- 静的ファイルのキャッシング
+- WordPress との連携設定
+
+### 3.3 ボーナスサービス
+
+#### Redis Cache
+
+- WordPress のキャッシュバックエンド
+- メモリ使用量の最適化
+- 永続化設定
+- セキュリティ対策
+
+#### FTP Server
+
+- vsftpd 実装
+- パッシブモード対応
+- WordPress ファイルへのアクセス
+- セキュリティ設定
+
+#### Adminer
+
+- データベース管理 GUI
+- PHP 7.3-fpm 統合
+- セキュリティ対策
+- 使いやすいインターフェース
+
+#### Static Website
+
+- Nginx ベース
+- カスタムデザイン
+- セキュリティヘッダー
+- 高速なレスポンス
+
+## 4. セットアップと設定
+
+### 4.1 環境変数の設定
+
+1. **環境変数ファイルの作成**
 
 ```bash
 # .env.templateをコピーして.envを作成
 cp srcs/.env.template srcs/.env
 
-# .envファイルを編集
-# 以下の項目を必ず設定してください：
+# .envファイルを編集して以下の値を設定:
 # - DOMAIN_NAME=atomboy.42.fr
 # - MYSQL_ROOT_PASSWORD（強力なパスワード）
 # - MYSQL_USER（データベースユーザー名）
@@ -107,136 +166,63 @@ cp srcs/.env.template srcs/.env
 # - WP_ADMIN_PASSWORD（WordPress管理者パスワード）
 ```
 
-4. **ホスト名の設定**
+2. **ホスト名の設定**
 
 ```bash
-# /etc/hostsファイルに以下を追加
+# /etc/hostsファイルに追加
 sudo echo "127.0.0.1 atomboy.42.fr" >> /etc/hosts
 ```
 
-## 3. プロジェクトの構築と実行
-
-### 3.1 基本的なビルドと実行
-
-1. **すべてのサービスをビルドして起動**
+### 4.2 サービスの起動
 
 ```bash
-# ビルドと起動を実行
+# すべてのサービスをビルドして起動
 make all
 
 # 状態確認
 make ps
-```
 
-2. **個別のサービス管理**
-
-```bash
-# 特定のサービスのログを確認
-make wordpress-logs
-make mariadb-logs
-make nginx-logs
-
-# サービスの再起動
-make reload
-```
-
-### 3.2 トラブルシューティング
-
-1. **よくある問題と解決方法**
-
-- **ポートの競合**
-
-  ```bash
-  # 使用中のポートを確認
-  sudo lsof -i :80
-  sudo lsof -i :443
-
-  # 競合するプロセスを停止
-  sudo kill <PID>
-  ```
-
-- **パーミッションエラー**
-  ```bash
-  # データディレクトリの権限を修正
-  sudo chown -R $(whoami):$(whoami) data/
-  ```
-
-2. **ログの確認方法**
-
-```bash
-# すべてのサービスのログを表示
+# ログの確認
 make logs
-
-# 特定のサービスのログをフォロー
-docker-compose -f srcs/docker-compose.yml logs -f wordpress
 ```
 
-## 4. サービスの詳細設定
+### 4.3 アクセス方法
 
-### 4.1 WordPress
+- WordPress: `https://atomboy.42.fr`
+- Adminer: `https://atomboy.42.fr/adminer/`
+- 静的サイト: `http://atomboy.42.fr:8080`
+- FTP: `ftp://atomboy.42.fr:21`
 
-1. **初期設定**
+## 5. トラブルシューティング
 
-- ブラウザで `https://atomboy.42.fr` にアクセス
-- 管理者アカウントは自動作成済み（.env の設定値）
-- 追加のユーザー作成が必要な場合は管理画面から実施
+### 5.1 よくある問題と解決方法
 
-2. **プラグインのインストール**
-
-- Redis Cache プラグイン（自動インストール済み）
-- 必要に応じて追加のプラグインをインストール
-
-### 4.2 データベース管理（Adminer）
-
-1. **アクセス方法**
-
-- `https://atomboy.42.fr/adminer/` にアクセス
-- ログイン情報：
-  - サーバー: mariadb
-  - ユーザー名: .env で設定した MYSQL_USER
-  - パスワード: .env で設定した MYSQL_PASSWORD
-  - データベース: wordpress
-
-### 4.3 FTP サーバー
-
-1. **接続設定**
+1. **ポートの競合**
 
 ```bash
-# FTPクライアントの設定
-ホスト: atomboy.42.fr
-ポート: 21
-ユーザー名: .envで設定したFTP_USER
-パスワード: .envで設定したFTP_PASSWORD
+# 使用中のポートを確認
+sudo lsof -i :80
+sudo lsof -i :443
+
+# 競合するプロセスを停止
+sudo kill <PID>
 ```
 
-2. **使用方法**
-
-- WordPress のテーマやプラグインのファイル管理
-- コンテンツのバックアップ
-
-### 4.4 Redis キャッシュ
-
-1. **動作確認**
+2. **パーミッションエラー**
 
 ```bash
-# Redisに接続
-make redis-cli
-
-# キャッシュの状態確認
-INFO stats
+# データディレクトリの権限を修正
+sudo chown -R $(whoami):$(whoami) data/
 ```
 
-2. **キャッシュのクリア**
+3. **サービスが起動しない**
 
-```bash
-# すべてのキャッシュをクリア
-make redis-cli
-> FLUSHALL
-```
+- ログの確認
+- 設定ファイルの確認
+- ポート競合の確認
+- ディスク容量の確認
 
-## 5. メンテナンスと運用
-
-### 5.1 定期的なメンテナンス
+### 5.2 メンテナンス
 
 1. **バックアップ**
 
@@ -257,12 +243,6 @@ make update
 
 # 設定の再読み込み
 make reload
-
-# 完全なクリーンアップ
-make clean
-
-# 設定を含む完全な再構築
-make re
 ```
 
 ## 9. 今後の改善点

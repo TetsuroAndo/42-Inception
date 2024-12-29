@@ -69,7 +69,7 @@ services:
 
   redis:
     build:
-      context: ./requirements/redis
+      context: ./requirements/bonus/redis
       dockerfile: Dockerfile
     container_name: redis
     restart: unless-stopped
@@ -87,7 +87,7 @@ services:
 
   ftp:
     build:
-      context: ./requirements/ftp
+      context: ./requirements/bonus/ftp
       dockerfile: Dockerfile
     container_name: ftp
     restart: unless-stopped
@@ -105,14 +105,15 @@ services:
 
   adminer:
     build:
-      context: ./requirements/adminer
+      context: ./requirements/bonus/adminer
       dockerfile: Dockerfile
     container_name: adminer
     restart: unless-stopped
     networks:
       - inception_network
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/"]
       interval: 10s
@@ -121,7 +122,7 @@ services:
 
   static:
     build:
-      context: ./requirements/static
+      context: ./requirements/bonus/static
       dockerfile: Dockerfile
     container_name: static
     restart: unless-stopped
@@ -145,13 +146,17 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /home/atomboy/data/db
+      device: /Users/atomboy/data/db
       o: bind
   wp_data:
     driver: local
     driver_opts:
       type: none
-      device: /home/atomboy/data/wp
+      device: /Users/atomboy/data/wordpress
       o: bind
   redis_data:
     driver: local
+    driver_opts:
+      type: none
+      device: /Users/atomboy/data/redis
+      o: bind
