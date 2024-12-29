@@ -13,6 +13,47 @@ Inception プロジェクトは、Docker を使用して複数のサービスを
 - 環境変数による設定管理
 - 各サービスの独立性と連携
 
+### ディレクトリ構造
+
+```
+inception/
+├── Makefile
+├── srcs/
+│   ├── docker-compose.yml
+│   ├── .env.template
+│   └── requirements/
+│       ├── mariadb/
+│       │   ├── Dockerfile
+│       │   ├── conf/
+│       │   └── tools/
+│       ├── nginx/
+│       │   ├── Dockerfile
+│       │   └── conf/
+│       ├── wordpress/
+│       │   ├── Dockerfile
+│       │   ├── conf/
+│       │   └── tools/
+│       ├── redis/
+│       │   ├── Dockerfile
+│       │   ├── conf/
+│       │   └── tools/
+│       ├── ftp/
+│       │   ├── Dockerfile
+│       │   ├── conf/
+│       │   └── tools/
+│       ├── adminer/
+│       │   ├── Dockerfile
+│       │   └── tools/
+│       └── static/
+│           ├── Dockerfile
+│           ├── conf/
+│           └── html/
+└── data/
+    ├── wp/
+    ├── db/
+    └── redis/
+```
+
 ## 2. 開発環境のセットアップ
 
 ### 2.1 必要なツール
