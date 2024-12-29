@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  mariadb:
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+    container_name: mariadb
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - inception_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    container_name: wordpress
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - wp_data:/var/www/html
+    networks:
+      - inception_network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - WP_REDIS_HOST=redis
+      - WP_REDIS_PORT=6379
+      - WP_REDIS_PASSWORD=${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - wp_data:/var/www/html
+    networks:
+      - inception_network
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:443/healthcheck.html", "-k"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    build:
+      context: ./requirements/redis
+      dockerfile: Dockerfile
+    container_name: redis
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+    networks:
+      - inception_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ftp:
+    build:
+      context: ./requirements/ftp
+      dockerfile: Dockerfile
+    container_name: ftp
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - wp_data:/var/www/html
+    ports:
+      - "21:21"
+      - "21000-21010:21000-21010"
+    networks:
+      - inception_network
+    depends_on:
+      - wordpress
+
+  adminer:
+    build:
+      context: ./requirements/adminer
+      dockerfile: Dockerfile
+    container_name: adminer
+    restart: unless-stopped
+    networks:
+      - inception_network
+    depends_on:
+      - mariadb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  static:
+    build:
+      context: ./requirements/static
+      dockerfile: Dockerfile
+    container_name: static
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - inception_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  inception_network:
+    driver: bridge
+    name: inception_network
+
+volumes:
+  db_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/atomboy/data/db
+      o: bind
+  wp_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/atomboy/data/wp
+      o: bind
+  redis_data:
+    driver: local
