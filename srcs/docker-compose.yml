@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mariadb:
@@ -62,7 +62,8 @@ services:
       wordpress:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost:443/healthcheck.html", "-k"]
+      test:
+        ["CMD", "curl", "-f", "https://localhost:443/healthcheck.html", "-k"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -146,17 +147,17 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /Users/atomboy/data/db
+      device: ../data/db
       o: bind
   wp_data:
     driver: local
     driver_opts:
       type: none
-      device: /Users/atomboy/data/wordpress
+      device: ../data/wp
       o: bind
   redis_data:
     driver: local
     driver_opts:
       type: none
-      device: /Users/atomboy/data/redis
+      device: ../data/redis
       o: bind
