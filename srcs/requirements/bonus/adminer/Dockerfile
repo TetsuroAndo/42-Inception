@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
     php7.3-fpm \
@@ -17,16 +17,16 @@ COPY ./tools/index.php .
 
 # PHP-FPMの設定
 RUN echo "\
-[www]\n\
-user = www-data\n\
-group = www-data\n\
-listen = 9000\n\
-pm = dynamic\n\
-pm.max_children = 5\n\
-pm.start_servers = 2\n\
-pm.min_spare_servers = 1\n\
-pm.max_spare_servers = 3\n\
-" > /etc/php/7.3/fpm/pool.d/www.conf
+    [www]\n\
+    user = www-data\n\
+    group = www-data\n\
+    listen = 9000\n\
+    pm = dynamic\n\
+    pm.max_children = 5\n\
+    pm.start_servers = 2\n\
+    pm.min_spare_servers = 1\n\
+    pm.max_spare_servers = 3\n\
+    " > /etc/php/7.3/fpm/pool.d/www.conf
 
 EXPOSE 9000
 

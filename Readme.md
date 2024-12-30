@@ -345,15 +345,15 @@ Makefile の作成（build, up, down, clean, fclean, re ターゲットを含む
 srcs/ディレクトリ以下に各サービスの設定を配置
 環境変数ファイル（.env）の作成
 MariaDB
-Dockerfile: debian:buster ベースのイメージ作成
+Dockerfile: debian:bookworm ベースのイメージ作成
 設定ファイル（50-server.cnf）
 初期化スクリプト（init_db.sh）
 Nginx
-Dockerfile: debian:buster ベースのイメージ作成
+Dockerfile: debian:bookworm ベースのイメージ作成
 SSL 証明書の自動生成設定
 Nginx 設定ファイル（TLSv1.2/1.3 のみ使用）
 WordPress
-Dockerfile: debian:buster ベースのイメージ作成
+Dockerfile: debian:bookworm ベースのイメージ作成
 PHP-FPM 設定
 WordPress 設定ファイル
 セットアップスクリプト
