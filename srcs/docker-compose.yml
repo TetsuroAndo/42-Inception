@@ -147,17 +147,17 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ../data/db
       o: bind
+      device: ${MARIADB_VOLUME_PATH}
   wp_data:
     driver: local
     driver_opts:
       type: none
-      device: ../data/wp
       o: bind
+      device: ${WORDPRESS_VOLUME_PATH}
   redis_data:
     driver: local
     driver_opts:
       type: none
-      device: ../data/redis
       o: bind
+      device: ${REDIS_VOLUME_PATH}
